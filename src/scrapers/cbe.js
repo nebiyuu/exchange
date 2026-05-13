@@ -1,8 +1,13 @@
 import axios from 'axios'
+import { hasRatesForToday } from '../../db/db.js'
 
 const BASE_URL = 'https://combanketh.et/cbeapi/daily-exchange-rates'
 
 export async function scrape() {
+  if (hasRatesForToday('CBE')) {
+    console.log('[cbe] Already scraped today, skipping')
+    return []
+  }
   try {
     const { data } = await axios.get(BASE_URL, {
       params: {

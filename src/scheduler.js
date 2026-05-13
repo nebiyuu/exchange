@@ -1,6 +1,6 @@
 import cron from 'node-cron'
 import { getScrapers } from './scrapers/index.js'
-import { saveRates } from '../db/db.js'
+import { saveRates, hasRatesForToday } from '../db/db.js'
 import dotenv from 'dotenv'
 
 dotenv.config()
@@ -12,6 +12,10 @@ async function scrapeAll() {
 
   for (const { code, name, scrape } of scrapers) {
     try {
+      if (hasRatesForToday(code)) {
+        console.log(`[scheduler] ${code}: already scraped today, skipping`)
+        continue
+      }
       console.log(`[scheduler] Scraping ${code} (${name})...`)
       const records = await scrape()
       if (records.length > 0) {
