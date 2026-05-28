@@ -2,5 +2,5 @@
 .env
 *.db
 plan.md
-/db/
+db/*.db*
 /foragents
