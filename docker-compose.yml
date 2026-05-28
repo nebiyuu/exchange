@@ -1,0 +1,15 @@
+services:
+  exchange:
+    build: .
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - PORT=3000
+      - DB_PATH=/data/rates.db
+      - SCRAPE_CRON=${SCRAPE_CRON:-0 9 * * *}
+    volumes:
+      - exchange-data:/data
+    restart: unless-stopped
+
+volumes:
+  exchange-data:

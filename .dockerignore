@@ -1,0 +1,10 @@
+node_modules
+.git
+.env
+*.db
+foragents
+README.md
+plan.md
+.dockerignore
+Dockerfile
+docker-compose.yml

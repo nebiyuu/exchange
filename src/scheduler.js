@@ -7,10 +7,16 @@ dotenv.config()
 
 const CRON_SCHEDULE = process.env.SCRAPE_CRON || '0 9 * * *'
 
+let aborted = false
+
 async function scrapeAll() {
   const scrapers = getScrapers()
 
   for (const { code, name, scrape } of scrapers) {
+    if (aborted) {
+      console.log('[scheduler] Aborted, stopping scrape')
+      return
+    }
     try {
       if (hasRatesForToday(code)) {
         console.log(`[scheduler] ${code}: already scraped today, skipping`)
@@ -18,6 +24,10 @@ async function scrapeAll() {
       }
       console.log(`[scheduler] Scraping ${code} (${name})...`)
       const records = await scrape()
+      if (aborted) {
+        console.log('[scheduler] Aborted after scrape, discarding results')
+        return
+      }
       if (records.length > 0) {
         saveRates(records)
         console.log(`[scheduler] ${code}: saved ${records.length} rates`)
@@ -30,10 +40,15 @@ async function scrapeAll() {
   }
 }
 
-cron.schedule(CRON_SCHEDULE, scrapeAll)
+const task = cron.schedule(CRON_SCHEDULE, scrapeAll)
 console.log(`[scheduler] Scrape cron set: ${CRON_SCHEDULE}`)
 
 export async function runNow() {
   console.log('[scheduler] Running initial scrape...')
   await scrapeAll()
+}
+
+export function stopScheduler() {
+  aborted = true
+  task.stop()
 }
