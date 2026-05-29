@@ -1,6 +1,7 @@
 services:
   exchange:
-    build: .
+    image: ghcr.io/nebiyuu/exchange:latest
+    pull_policy: always
     ports:
       - "${PORT:-3000}:3000"
     environment:
