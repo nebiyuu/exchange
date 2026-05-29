@@ -133,10 +133,10 @@ export function getRatesByCurrency(currency) {
     INNER JOIN (
       SELECT bank, MAX(scraped_at) as max_scraped
       FROM rates
-      WHERE currency = ?
+      WHERE currency = ? AND date(scraped_at) = date('now')
       GROUP BY bank
     ) latest ON r.bank = latest.bank AND r.scraped_at = latest.max_scraped
-    WHERE r.currency = ?
+    WHERE r.currency = ? AND date(r.scraped_at) = date('now')
     ORDER BY r.cash_buying DESC
   `).all(currency, currency)
 
