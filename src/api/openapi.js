@@ -13,6 +13,10 @@ const options = {
         url: `http://localhost:${process.env.PORT || 3000}`,
         description: 'Local development',
       },
+      {
+        url: 'https://eth-rates.duckdns.org',
+        description: 'Production',
+      },
     ],
     tags: [
       { name: 'Banks', description: 'Bank listing and discovery' },
