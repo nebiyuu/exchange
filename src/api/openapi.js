@@ -82,6 +82,21 @@ const options = {
             },
           },
         },
+        BestRateResponse: {
+          type: 'object',
+          required: ['currency', 'type', 'bank', 'rate', 'cash_buying', 'cash_selling', 'transactional_buying', 'transactional_selling', 'scraped_at'],
+          properties: {
+            currency: { type: 'string', example: 'USD', description: 'Currency code (ISO 4217)' },
+            type: { type: 'string', enum: ['buying', 'selling', 'transactional_buying', 'transactional_selling'], example: 'buying', description: 'Rate type used for comparison' },
+            bank: { $ref: '#/components/schemas/Bank' },
+            rate: { type: 'number', example: 127.5, description: 'Winning rate value for the requested type' },
+            cash_buying: { type: 'number', nullable: true, example: 127.5, description: 'Cash buying rate from the winning bank' },
+            cash_selling: { type: 'number', nullable: true, example: 128.9, description: 'Cash selling rate from the winning bank' },
+            transactional_buying: { type: 'number', nullable: true, example: 125.8, description: 'Transactional buying rate from the winning bank' },
+            transactional_selling: { type: 'number', nullable: true, example: 128.5, description: 'Transactional selling rate from the winning bank' },
+            scraped_at: { type: 'string', format: 'date-time', example: '2026-05-29T09:00:00.000Z', description: 'ISO timestamp of when the winning bank was scraped' },
+          },
+        },
         RateHistoryEntry: {
           type: 'object',
           required: ['scraped_at', 'cash_buying', 'cash_selling', 'transactional_buying', 'transactional_selling'],
