@@ -40,17 +40,27 @@ export function saveRates(records) {
   insertMany(records)
 }
 
-export function getRatesByBank(bank) {
-  const rows = db.prepare(`
+export function getRatesByBank(bank, currencies = []) {
+  let query = `
     SELECT currency, cash_buying, cash_selling, transactional_buying, transactional_selling, scraped_at
     FROM rates
     WHERE bank = ?
+  `
+  const params = [bank]
+
+  if (currencies.length) {
+    query += ` AND currency IN (${currencies.map(() => '?').join(',')})`
+    params.push(...currencies)
+  }
+
+  query += `
     AND scraped_at = (
       SELECT MAX(scraped_at) FROM rates WHERE bank = ?
     )
-  `).all(bank, bank)
+  `
+  params.push(bank)
 
-  return rows
+  return db.prepare(query).all(...params)
 }
 
 export function hasRatesForToday(bank) {
@@ -87,8 +97,19 @@ export function getRateHistory(bank, currency, from, to) {
   return db.prepare(query).all(...params)
 }
 
-export function getRatesByCurrency(currency) {
-  const rows = db.prepare(`
+export function getBestRate(currency, type) {
+  const columnMap = {
+    buying: 'cash_buying',
+    selling: 'cash_selling',
+    transactional_buying: 'transactional_buying',
+    transactional_selling: 'transactional_selling',
+  }
+  const column = columnMap[type]
+  if (!column) return null
+
+  const order = type.includes('selling') ? 'ASC' : 'DESC'
+
+  const row = db.prepare(`
     SELECT r.bank, r.currency, r.cash_buying, r.cash_selling, r.transactional_buying, r.transactional_selling, r.scraped_at
     FROM rates r
     INNER JOIN (
@@ -97,10 +118,6 @@ export function getRatesByCurrency(currency) {
       WHERE currency = ?
       GROUP BY bank
     ) latest ON r.bank = latest.bank AND r.scraped_at = latest.max_scraped
-<<<<<<< Updated upstream
-    WHERE r.currency = ?
-    ORDER BY r.cash_buying DESC
-=======
     WHERE r.currency = ? AND r.${column} IS NOT NULL
     ORDER BY r.${column} ${order}
     LIMIT 1
@@ -109,18 +126,7 @@ export function getRatesByCurrency(currency) {
   return row || null
 }
 
-export function getRatesByCurrency(currency, sort = 'cash_buying', order = 'DESC') {
-  const allowedSorts = ['cash_buying', 'cash_selling', 'transactional_buying', 'transactional_selling', 'bank']
-  if (!allowedSorts.includes(sort)) sort = 'cash_buying'
-  order = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'
-
-  let orderClause
-  if (sort === 'bank') {
-    orderClause = `ORDER BY r.bank COLLATE NOCASE ${order}`
-  } else {
-    orderClause = `ORDER BY r.${sort} ${order}`
-  }
-
+export function getRatesByCurrency(currency) {
   const rows = db.prepare(`
     SELECT r.bank, r.currency, r.cash_buying, r.cash_selling, r.transactional_buying, r.transactional_selling, r.scraped_at
     FROM rates r
@@ -131,8 +137,7 @@ export function getRatesByCurrency(currency, sort = 'cash_buying', order = 'DESC
       GROUP BY bank
     ) latest ON r.bank = latest.bank AND r.scraped_at = latest.max_scraped
     WHERE r.currency = ? AND date(r.scraped_at) = date('now')
-    ${orderClause}
->>>>>>> Stashed changes
+    ORDER BY r.cash_buying DESC
   `).all(currency, currency)
 
   return rows
