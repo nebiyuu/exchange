@@ -72,13 +72,15 @@ const options = {
         },
         CompareResponse: {
           type: 'object',
-          required: ['currency', 'rates'],
+          required: ['currency', 'sort', 'order', 'rates'],
           properties: {
             currency: { type: 'string', example: 'USD', description: 'Currency code (ISO 4217)' },
+            sort: { type: 'string', enum: ['cash_buying', 'cash_selling', 'transactional_buying', 'transactional_selling', 'bank'], example: 'cash_buying', description: 'Field used for sorting' },
+            order: { type: 'string', enum: ['asc', 'desc'], example: 'desc', description: 'Sort direction' },
             rates: {
               type: 'array',
               items: { $ref: '#/components/schemas/CompareBankRate' },
-              description: 'List of bank rates for the currency, sorted by cash_buying descending',
+              description: 'List of bank rates for the currency, sorted by the requested field and order',
             },
           },
         },
