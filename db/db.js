@@ -97,8 +97,42 @@ export function getRatesByCurrency(currency) {
       WHERE currency = ?
       GROUP BY bank
     ) latest ON r.bank = latest.bank AND r.scraped_at = latest.max_scraped
+<<<<<<< Updated upstream
     WHERE r.currency = ?
     ORDER BY r.cash_buying DESC
+=======
+    WHERE r.currency = ? AND r.${column} IS NOT NULL
+    ORDER BY r.${column} ${order}
+    LIMIT 1
+  `).get(currency, currency)
+
+  return row || null
+}
+
+export function getRatesByCurrency(currency, sort = 'cash_buying', order = 'DESC') {
+  const allowedSorts = ['cash_buying', 'cash_selling', 'transactional_buying', 'transactional_selling', 'bank']
+  if (!allowedSorts.includes(sort)) sort = 'cash_buying'
+  order = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'
+
+  let orderClause
+  if (sort === 'bank') {
+    orderClause = `ORDER BY r.bank COLLATE NOCASE ${order}`
+  } else {
+    orderClause = `ORDER BY r.${sort} ${order}`
+  }
+
+  const rows = db.prepare(`
+    SELECT r.bank, r.currency, r.cash_buying, r.cash_selling, r.transactional_buying, r.transactional_selling, r.scraped_at
+    FROM rates r
+    INNER JOIN (
+      SELECT bank, MAX(scraped_at) as max_scraped
+      FROM rates
+      WHERE currency = ? AND date(scraped_at) = date('now')
+      GROUP BY bank
+    ) latest ON r.bank = latest.bank AND r.scraped_at = latest.max_scraped
+    WHERE r.currency = ? AND date(r.scraped_at) = date('now')
+    ${orderClause}
+>>>>>>> Stashed changes
   `).all(currency, currency)
 
   return rows
