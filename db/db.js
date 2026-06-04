@@ -25,6 +25,23 @@ db.exec(`
   ON rates(bank, scraped_at DESC)
 `)
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS scrape_audit (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bank TEXT NOT NULL,
+    status TEXT NOT NULL,
+    rates_count INTEGER DEFAULT 0,
+    error_message TEXT,
+    duration_ms INTEGER,
+    attempted_at TEXT NOT NULL
+  )
+`)
+
+db.exec(`
+  CREATE INDEX IF NOT EXISTS idx_scrape_audit_bank
+  ON scrape_audit(bank, attempted_at DESC)
+`)
+
 export function saveRates(records) {
   if (!records.length) return
 
@@ -152,6 +169,33 @@ export function getLatestScrapeTime(bank) {
   `).get(bank)
 
   return row ? row.scraped_at : null
+}
+
+export function logScrapeAttempt({ bank, status, ratesCount = 0, errorMessage = null, durationMs = 0 }) {
+  db.prepare(`
+    INSERT INTO scrape_audit (bank, status, rates_count, error_message, duration_ms, attempted_at)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(bank, status, ratesCount, errorMessage, durationMs, new Date().toISOString())
+}
+
+export function getScrapersStatus() {
+  const rows = db.prepare(`
+    SELECT a.bank, a.status, a.rates_count, a.error_message, a.duration_ms, a.attempted_at,
+      (SELECT MAX(attempted_at) FROM scrape_audit WHERE bank = a.bank AND status = 'success') as last_success_at
+    FROM scrape_audit a
+    WHERE a.id IN (SELECT MAX(id) FROM scrape_audit GROUP BY bank)
+  `).all()
+
+  const today = new Date().toISOString().slice(0, 10)
+  return rows.map(r => ({
+    bank: r.bank,
+    status: r.attempted_at && r.attempted_at.startsWith(today) ? r.status : 'pending',
+    rates_count: r.rates_count,
+    error: r.error_message || null,
+    duration_ms: r.duration_ms,
+    last_success_at: r.last_success_at || null,
+    last_attempt_at: r.attempted_at || null,
+  }))
 }
 
 export function closeDb() {

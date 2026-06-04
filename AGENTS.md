@@ -25,8 +25,8 @@ npm start       # node server.js
   - `GET /docs` — Swagger UI, `GET /docs.json` — raw spec
 - `src/scrapers/*.js` — one file per bank (9 total).
   - Registered in `src/scrapers/index.js`. Add a new scraper by adding to both.
-  - Each scraper exports an `async function scrape()` that returns `{ bank, currency, cash_buying, cash_selling, transactional_buying, transactional_selling, scraped_at }[]`.
-  - Scrapers **never throw** — catch errors and return `[]`.
+  - Each scraper exports an `async function scrape()` that returns `{ records: { bank, currency, cash_buying, cash_selling, transactional_buying, transactional_selling, scraped_at }[], error: string | null }`.
+  - Scrapers never throw — catch errors and return `{ records: [], error: err.message }`.
   - Coop (`coop.js`) is a skeleton (AJAX source not yet reverse-engineered).
 - `src/scheduler.js` — iterates all scrapers, skips banks already scraped today, aborts on shutdown.
 - `db/db.js` — `better-sqlite3` with WAL mode. Schema includes `cash_buying`, `cash_selling`, `transactional_buying`, `transactional_selling`.

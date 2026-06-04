@@ -130,6 +130,30 @@ const options = {
             error: { type: 'string', example: 'No rates found for bank: XYZ', description: 'Error message' },
           },
         },
+        ScraperStatus: {
+          type: 'object',
+          required: ['code', 'name', 'status'],
+          properties: {
+            code: { type: 'string', example: 'CBE', description: 'Bank code' },
+            name: { type: 'string', example: 'Commercial Bank of Ethiopia', description: 'Full bank name' },
+            status: { type: 'string', enum: ['success', 'failure', 'skipped', 'pending'], example: 'success', description: 'Scrape status for today' },
+            rates_count: { type: 'integer', example: 14, description: 'Number of rates from last successful scrape' },
+            last_success_at: { type: 'string', format: 'date-time', nullable: true, example: '2026-06-04T06:00:01.000Z', description: 'Last successful scrape timestamp' },
+            last_attempt_at: { type: 'string', format: 'date-time', nullable: true, example: '2026-06-04T06:00:01.000Z', description: 'Last scrape attempt timestamp' },
+            duration_ms: { type: 'integer', nullable: true, example: 823, description: 'Duration of latest attempt in milliseconds' },
+            error: { type: 'string', nullable: true, example: 'timeout of 15000ms exceeded', description: 'Error message from last failed attempt' },
+          },
+        },
+        ScrapersStatusResponse: {
+          type: 'object',
+          required: ['scrapers'],
+          properties: {
+            scrapers: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/ScraperStatus' },
+            },
+          },
+        },
       },
     },
   },

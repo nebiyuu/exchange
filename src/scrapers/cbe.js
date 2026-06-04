@@ -6,7 +6,7 @@ const BASE_URL = 'https://combanketh.et/cbeapi/daily-exchange-rates'
 export async function scrape() {
   if (hasRatesForToday('CBE')) {
     console.log('[cbe] Already scraped today, skipping')
-    return []
+    return { records: [], error: null }
   }
   try {
     const { data } = await axios.get(BASE_URL, {
@@ -24,14 +24,14 @@ export async function scrape() {
 
     if (!Array.isArray(data) || data.length === 0) {
       console.error('[cbe] No exchange rate data returned')
-      return []
+      return { records: [], error: 'No exchange rate data returned' }
     }
 
     const latest = data[0]
     const rates = latest.ExchangeRate || []
     const scrapedAt = new Date().toISOString()
 
-    return rates
+    const records = rates
       .map((entry) => ({
         bank: 'CBE',
         currency: entry.currency?.CurrencyCode?.toUpperCase().trim() || '',
@@ -42,8 +42,10 @@ export async function scrape() {
         scraped_at: scrapedAt,
       }))
       .filter((r) => r.currency)
+
+    return { records, error: null }
   } catch (err) {
     console.error('[cbe] Scrape failed:', err.message)
-    return []
+    return { records: [], error: err.message }
   }
 }

@@ -1,7 +1,11 @@
 import express from 'express'
 import swaggerUi from 'swagger-ui-express'
 import openapiSpec from './openapi.js'
+<<<<<<< HEAD
+import { getRatesByBank, getRatesByCurrency, getRateHistory, getScrapersStatus } from '../../db/db.js'
+=======
 import { getRatesByBank, getRatesByCurrency, getRateHistory, getBestRate } from '../../db/db.js'
+>>>>>>> main
 import { getScrapers } from '../scrapers/index.js'
 
 const app = express()
@@ -349,6 +353,54 @@ app.get('/rates/:bank/:currency/history', (req, res) => {
  */
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() })
+})
+
+/**
+ * @openapi
+ * /scrapers/status:
+ *   get:
+ *     summary: Get scraper health status for all banks
+ *     tags: [System]
+ *     responses:
+ *       200:
+ *         description: Per-bank scrape status (success, failure, skipped, pending)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ScrapersStatusResponse'
+ */
+app.get('/scrapers/status', (_req, res) => {
+  const dbStatuses = getScrapersStatus()
+  const scrapers = getScrapers()
+
+  const result = scrapers.map(({ code, name }) => {
+    const db = dbStatuses.find(r => r.bank === code)
+    if (db) {
+      return {
+        code,
+        name,
+        status: db.status,
+        rates_count: db.rates_count,
+        last_success_at: db.last_success_at,
+        last_attempt_at: db.last_attempt_at,
+        duration_ms: db.duration_ms,
+        error: db.error,
+      }
+    }
+    return {
+      code,
+      name,
+      status: 'pending',
+      rates_count: 0,
+      last_success_at: null,
+      last_attempt_at: null,
+      duration_ms: null,
+      error: null,
+    }
+  })
+
+  res.set('Cache-Control', 'max-age=300')
+  res.json({ scrapers: result })
 })
 
 export default app
