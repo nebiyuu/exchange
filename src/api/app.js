@@ -1,7 +1,11 @@
 import express from 'express'
 import swaggerUi from 'swagger-ui-express'
 import openapiSpec from './openapi.js'
+<<<<<<< HEAD
 import { getRatesByBank, getRatesByCurrency, getRateHistory, getScrapersStatus } from '../../db/db.js'
+=======
+import { getRatesByBank, getRatesByCurrency, getRateHistory, getBestRate } from '../../db/db.js'
+>>>>>>> main
 import { getScrapers } from '../scrapers/index.js'
 
 const app = express()
@@ -51,6 +55,12 @@ app.get('/banks', (_req, res) => {
  *           type: string
  *         description: Bank code (e.g. CBE, AWASH, DASHEN)
  *         example: CBE
+ *       - in: query
+ *         name: currency
+ *         schema:
+ *           type: string
+ *         description: Comma-separated currency codes to filter (e.g. USD,EUR)
+ *         example: USD,EUR
  *     responses:
  *       200:
  *         description: Latest exchange rates for the requested bank
@@ -67,7 +77,10 @@ app.get('/banks', (_req, res) => {
  */
 app.get('/rates/:bank', (req, res) => {
   const bank = req.params.bank.toUpperCase()
-  const rows = getRatesByBank(bank)
+  const currencies = req.query.currency
+    ? req.query.currency.split(',').map((c) => c.trim().toUpperCase()).filter(Boolean)
+    : []
+  const rows = getRatesByBank(bank, currencies)
 
   if (!rows.length) {
     return res.status(404).json({ error: `No rates found for bank: ${bank}` })
@@ -136,6 +149,81 @@ app.get('/compare/:currency', (req, res) => {
       transactional_selling: r.transactional_selling,
       scraped_at: r.scraped_at,
     })),
+  })
+})
+
+/**
+ * @openapi
+ * /best/{currency}:
+ *   get:
+ *     summary: Get the best rate for a currency across all banks
+ *     tags: [Rates]
+ *     parameters:
+ *       - in: path
+ *         name: currency
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Currency code (e.g. USD, EUR, GBP)
+ *         example: USD
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [buying, selling, transactional_buying, transactional_selling]
+ *           default: buying
+ *         description: Rate type to compare (buying=highest cash buying, selling=lowest cash selling)
+ *         example: buying
+ *     responses:
+ *       200:
+ *         description: Best bank and rate for the requested currency and rate type
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BestRateResponse'
+ *       400:
+ *         description: Invalid rate type
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: No rates found for the given currency
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+app.get('/best/:currency', (req, res) => {
+  const currency = req.params.currency.toUpperCase()
+  const type = req.query.type || 'buying'
+
+  const validTypes = ['buying', 'selling', 'transactional_buying', 'transactional_selling']
+  if (!validTypes.includes(type)) {
+    return res.status(400).json({ error: `Invalid type: ${type}. Valid: ${validTypes.join(', ')}` })
+  }
+
+  const row = getBestRate(currency, type)
+  if (!row) {
+    return res.status(404).json({ error: `No rates found for currency: ${currency}` })
+  }
+
+  const banks = Object.fromEntries(
+    getScrapers().map(({ code, name }) => [code, name])
+  )
+
+  res.json({
+    currency,
+    type,
+    bank: { code: row.bank, name: banks[row.bank] || row.bank },
+    rate: row[type.includes('selling')
+      ? (type === 'selling' ? 'cash_selling' : 'transactional_selling')
+      : (type === 'buying' ? 'cash_buying' : 'transactional_buying')],
+    cash_buying: row.cash_buying,
+    cash_selling: row.cash_selling,
+    transactional_buying: row.transactional_buying,
+    transactional_selling: row.transactional_selling,
+    scraped_at: row.scraped_at,
   })
 })
 
