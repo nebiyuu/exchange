@@ -109,9 +109,25 @@ app.get('/rates/:bank', (req, res) => {
  *           type: string
  *         description: Currency code (e.g. USD, EUR, GBP)
  *         example: USD
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [cash_buying, cash_selling, transactional_buying, transactional_selling, bank]
+ *           default: cash_buying
+ *         description: Field to sort results by
+ *         example: cash_buying
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Sort direction
+ *         example: desc
  *     responses:
  *       200:
- *         description: Comparison of rates across all banks sorted by cash_buying descending
+ *         description: Comparison of rates across all banks sorted by the requested field and order
  *         content:
  *           application/json:
  *             schema:
@@ -125,7 +141,18 @@ app.get('/rates/:bank', (req, res) => {
  */
 app.get('/compare/:currency', (req, res) => {
   const currency = req.params.currency.toUpperCase()
-  const rows = getRatesByCurrency(currency)
+
+  const allowedSorts = ['cash_buying', 'cash_selling', 'transactional_buying', 'transactional_selling', 'bank']
+  const sort = req.query.sort && allowedSorts.includes(req.query.sort.toLowerCase())
+    ? req.query.sort.toLowerCase()
+    : 'cash_buying'
+
+  const allowedOrders = ['asc', 'desc']
+  const order = req.query.order && allowedOrders.includes(req.query.order.toLowerCase())
+    ? req.query.order.toLowerCase()
+    : 'desc'
+
+  const rows = getRatesByCurrency(currency, sort, order)
 
   if (!rows.length) {
     return res.status(404).json({ error: `No rates found for currency: ${currency}` })
@@ -137,6 +164,8 @@ app.get('/compare/:currency', (req, res) => {
 
   res.json({
     currency,
+    sort,
+    order,
     rates: rows.map((r) => ({
       bank: { code: r.bank, name: banks[r.bank] || r.bank },
       cash_buying: r.cash_buying,
