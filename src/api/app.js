@@ -7,6 +7,41 @@ import { getScrapers } from '../scrapers/index.js'
 const app = express()
 app.use(express.json())
 
+app.get('/', (_req, res) => {
+  res.type('html').send(`<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ETH Bank Rates API</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,sans-serif;background:#fff;color:#1e293b;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
+  main{max-width:520px;text-align:center}
+  h1{font-size:2rem;font-weight:700;color:#0f172a;margin-bottom:.75rem}
+  p{font-size:1.05rem;line-height:1.7;color:#475569;margin-bottom:2rem;max-width:440px;margin-left:auto;margin-right:auto}
+  .links{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap}
+  a{display:inline-flex;padding:.65rem 1.25rem;border-radius:6px;text-decoration:none;font-weight:500;font-size:.92rem;border:1.5px solid #d1d5db;color:#374151;transition:all .12s}
+  a:hover{border-color:#9ca3af;background:#f9fafb}
+  a.primary{background:#111827;color:#fff;border-color:#111827;font-weight:600}
+  a.primary:hover{background:#1f2937;border-color:#1f2937}
+  footer{margin-top:2.5rem;font-size:.82rem;color:#9ca3af}
+</style>
+</head>
+<body>
+<main>
+  <h1>ETH Bank Rates API</h1>
+  <p>Daily forex rates from 9 Ethiopian banks &mdash; scraped, normalized, and served over REST.</p>
+  <div class="links">
+    <a class="primary" href="/docs">Interactive Docs</a>
+    <a href="https://github.com/nebiyuu/exchange">GitHub</a>
+  </div>
+  <footer>Rates refresh daily at 9 AM EAT</footer>
+</main>
+</body>
+</html>`)
+})
+
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec))
 
 app.get('/docs.json', (_req, res) => {
