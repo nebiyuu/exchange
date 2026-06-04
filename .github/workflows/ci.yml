@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  smoke:
+    name: Smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start app and hit endpoints
+        env:
+          PORT: 3000
+        run: |
+          set -e
+          npm start &
+          APP_PID=$!
+          trap 'kill $APP_PID 2>/dev/null; pkill -f "node server.js" 2>/dev/null || true' EXIT
+
+          echo "Waiting for app to become ready..."
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000/health >/dev/null 2>&1; then
+              echo "App ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+
+          echo "--- /health ---"
+          curl -fsS http://127.0.0.1:3000/health
+          echo
+          echo "--- /banks ---"
+          curl -fsS http://127.0.0.1:3000/banks
+          echo
