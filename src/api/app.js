@@ -1,11 +1,7 @@
 import express from 'express'
 import swaggerUi from 'swagger-ui-express'
 import openapiSpec from './openapi.js'
-<<<<<<< HEAD
-import { getRatesByBank, getRatesByCurrency, getRateHistory, getScrapersStatus } from '../../db/db.js'
-=======
-import { getRatesByBank, getRatesByCurrency, getRateHistory, getBestRate } from '../../db/db.js'
->>>>>>> main
+import { getRatesByBank, getRatesByCurrency, getRateHistory, getBestRate, getScrapersStatus } from '../../db/db.js'
 import { getScrapers } from '../scrapers/index.js'
 
 const app = express()
