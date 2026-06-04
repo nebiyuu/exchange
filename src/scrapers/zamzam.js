@@ -12,7 +12,7 @@ const HEADERS = {
 export async function scrape() {
   if (hasRatesForToday('ZAMZAM')) {
     console.log('[zamzam] Already scraped today, skipping')
-    return []
+    return { records: [], error: null }
   }
   try {
     const { data: html } = await axios.get(PAGE_URL, {
@@ -38,7 +38,7 @@ export async function scrape() {
     })
 
     const scrapedAt = new Date().toISOString()
-    return Object.entries(rateMap)
+    const records = Object.entries(rateMap)
       .map(([currency, rates]) => ({
         bank: 'ZAMZAM',
         currency,
@@ -46,8 +46,9 @@ export async function scrape() {
         scraped_at: scrapedAt,
       }))
       .filter((r) => r.currency)
+    return { records, error: null }
   } catch (err) {
     console.error('[zamzam] Scrape failed:', err.message)
-    return []
+    return { records: [], error: err.message }
   }
 }

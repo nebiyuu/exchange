@@ -9,8 +9,8 @@ const HEADERS = {
 export async function scrape() {
   if (hasRatesForToday('COOP')) {
     console.log('[coop] Already scraped today, skipping')
-    return []
+    return { records: [], error: null }
   }
   console.warn('[coop] Exchange rate data source not yet discovered, skipping')
-  return []
+  return { records: [], error: 'Exchange rate data source not yet discovered' }
 }

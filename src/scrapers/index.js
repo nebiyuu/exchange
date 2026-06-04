@@ -17,7 +17,7 @@ const registry = [
   { code: 'ZEMEN', name: 'Zemen Bank', scrape: zemen.scrape },
   { code: 'SIINQEE', name: 'Siinqee Bank', scrape: siinqee.scrape },
   { code: 'ABYSSINIA', name: 'Bank of Abyssinia', scrape: abyssinia.scrape },
-  { code: 'COOP', name: 'Cooperative Bank of Oromia', scrape: coop.scrape },
+  { code: 'COOP', name: 'Cooperative Bank of Oromia', scrape: coop.scrape, active: false },
 ]
 
 export function getScrapers() {

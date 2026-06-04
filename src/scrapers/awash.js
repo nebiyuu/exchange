@@ -33,7 +33,7 @@ function extractBundleUrl(html) {
 export async function scrape() {
   if (hasRatesForToday('AWASH')) {
     console.log('[awash] Already scraped today, skipping')
-    return []
+    return { records: [], error: null }
   }
   try {
     const pageResp = await axios.get(PAGE_URL, {
@@ -45,7 +45,7 @@ export async function scrape() {
     const bundleUrl = extractBundleUrl(html)
     if (!bundleUrl) {
       console.error('[awash] Could not find LiteSpeed bundle URL')
-      return []
+      return { records: [], error: 'Could not find LiteSpeed bundle URL' }
     }
 
     const jsResp = await axios.get(bundleUrl, {
@@ -61,7 +61,7 @@ export async function scrape() {
     const nonce = extractNonce(js)
     if (!nonce) {
       console.error('[awash] Could not extract nonce from bundle JS')
-      return []
+      return { records: [], error: 'Could not extract nonce from bundle JS' }
     }
 
     const formData = new URLSearchParams()
@@ -84,18 +84,18 @@ export async function scrape() {
     const body = ajaxResp.data
     if (!body.success) {
       console.error('[awash] AJAX request failed:', body.data || body)
-      return []
+      return { records: [], error: 'AJAX request failed: ' + (body.data || body) }
     }
 
     const rates = body.data && body.data.rates
     if (!rates || typeof rates !== 'object') {
       console.error('[awash] Unexpected response format')
-      return []
+      return { records: [], error: 'Unexpected response format' }
     }
 
     const scrapedAt = new Date().toISOString()
 
-    return Object.entries(rates)
+    const records = Object.entries(rates)
       .map(([currency, entry]) => ({
         bank: 'AWASH',
         currency: currency.toUpperCase().trim(),
@@ -106,8 +106,10 @@ export async function scrape() {
         scraped_at: scrapedAt,
       }))
       .filter((r) => r.currency)
+
+    return { records, error: null }
   } catch (err) {
     console.error('[awash] Scrape failed:', err.message)
-    return []
+    return { records: [], error: err.message }
   }
 }
