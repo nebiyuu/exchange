@@ -52,9 +52,8 @@ export async function scrape() {
       headers: {
         'User-Agent': HEADERS['User-Agent'],
         Accept: '*/*',
-        Range: 'bytes=0-500000',
       },
-      timeout: 20000,
+      timeout: 30000,
     })
     const js = typeof jsResp.data === 'string' ? jsResp.data : jsResp.data.toString()
 

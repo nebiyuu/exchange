@@ -1,11 +1,34 @@
 import express from 'express'
+import helmet from 'helmet'
+import cors from 'cors'
+import rateLimit from 'express-rate-limit'
 import swaggerUi from 'swagger-ui-express'
 import openapiSpec from './openapi.js'
 import { getRatesByBank, getRatesByCurrency, getRateHistory, getBestRate, getScrapersStatus } from '../../db/db.js'
 import { getScrapers } from '../scrapers/index.js'
 
 const app = express()
+
+app.use(helmet())
+app.use(cors({ methods: ['GET'] }))
 app.use(express.json())
+
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later' },
+})
+app.use(globalLimiter)
+
+const statusLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later' },
+})
 
 app.get('/', (_req, res) => {
   res.type('html').send(`<!doctype html>
@@ -400,7 +423,7 @@ app.get('/health', (_req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/ScrapersStatusResponse'
  */
-app.get('/scrapers/status', (_req, res) => {
+app.get('/scrapers/status', statusLimiter, (_req, res) => {
   const dbStatuses = getScrapersStatus()
   const scrapers = getScrapers()
 
