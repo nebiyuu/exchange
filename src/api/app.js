@@ -54,7 +54,7 @@ app.get('/', (_req, res) => {
 <body>
 <main>
   <h1>ETH Bank Rates API</h1>
-  <p>Daily forex rates from 9 Ethiopian banks &mdash; scraped, normalized, and served over REST.</p>
+  <p>Daily forex rates from Ethiopian banks &mdash; scraped, normalized, and served over REST.</p>
   <div class="links">
     <a class="primary" href="/docs">Interactive Docs</a>
     <a href="https://github.com/nebiyuu/exchange">GitHub</a>

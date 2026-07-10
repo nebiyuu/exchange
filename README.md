@@ -1,6 +1,6 @@
 # Ethiopian Bank Exchange Rate API
 
-Scrapes daily forex rates from 9 Ethiopian banks, stores them in SQLite, exposes them via REST.
+Scrapes daily forex rates from Ethiopian banks, stores them in SQLite, exposes them via REST.
 
 [![Node](https://img.shields.io/badge/node-22-339933)](https://nodejs.org)
 [![Express](https://img.shields.io/badge/express-4-000000)](https://expressjs.com)
@@ -30,7 +30,7 @@ Runs a daily scrape of Ethiopian bank websites — some are JSON APIs, others ne
 | ZEMEN | Zemen Bank | HTML panels |
 | SIINQEE | Siinqee Bank | HTML table |
 | ABYSSINIA | Bank of Abyssinia | TablePress HTML |
-| COOP | Cooperative Bank of Oromia | Skeleton (source TBD) |
+
 
 ## Quick start
 

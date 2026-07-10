@@ -6,7 +6,7 @@ const options = {
     info: {
       title: 'ETH Bank Rates API',
       version: '1.0.0',
-      description: 'REST API providing daily exchange rates scraped from Ethiopian banks. Supports cash and transactional buying/selling rates for multiple currencies across 9 banks.',
+      description: 'REST API providing daily exchange rates scraped from Ethiopian banks. Supports cash and transactional buying/selling rates for multiple currencies across Ethiopian banks.',
     },
     servers: [
       {
