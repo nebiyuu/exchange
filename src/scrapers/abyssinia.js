@@ -1,3 +1,4 @@
+import https from 'https'
 import axios from 'axios'
 import * as cheerio from 'cheerio'
 import { hasRatesForToday } from '../../db/db.js'
@@ -9,6 +10,8 @@ const HEADERS = {
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
 }
 
+const HTTPS_AGENT = new https.Agent({ rejectUnauthorized: false })
+
 export async function scrape() {
   if (hasRatesForToday('ABYSSINIA')) {
     console.log('[abyssinia] Already scraped today, skipping')
@@ -18,6 +21,7 @@ export async function scrape() {
     const { data: html } = await axios.get(PAGE_URL, {
       headers: HEADERS,
       timeout: 25000,
+      httpsAgent: HTTPS_AGENT,
     })
 
     const $ = cheerio.load(html)
